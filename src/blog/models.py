@@ -1,10 +1,16 @@
 from django.contrib.auth.models import User
 from django.db.models import \
     (CharField, TextField, Model,
-    DateTimeField, ForeignKey, SlugField, CASCADE)
+    DateTimeField, ForeignKey, SlugField, Manager, CASCADE)
 from django.db import models
 from django.utils import timezone
 
+
+
+class PublishManager(Manager):
+
+    def get_queryset(self):
+        return super().get_queryset().filter(status='published')
 
 
 class Post(Model):
@@ -41,6 +47,12 @@ class Post(Model):
     # если в поле модули указать primary_key=True, то это поле будет primary_key
     # по умолчанию primary_key - id
 
+    # мой кастомный менеджер - показывает и все фильтрует все опубликованные посты (status='published')
+    # важный момент - при определении кастомного менеджера, если хочешь сохранить
+    # и старый менеджер тоже, то необходимо его явно определять objects = Manager()
+    objects = Manager()
+    published = PublishManager()
+
 
 
 # консольная команда sqlmigrate application number_migration like
@@ -61,3 +73,22 @@ CREATE INDEX "blog_post_custom_slug_95392f12" ON "blog_post_custom" ("slug");
 CREATE INDEX "blog_post_custom_author_id_34d1c811" ON "blog_post_custom" ("author_id");
 COMMIT;
     """
+
+# Важно, ORM Django совместима с SQLite, MySQL, PostgreSQL, Oracle.
+# https://docs.djangoproject.com/en/3.1/ref/databases/
+# В django можно настроить работу с несколькими СУБД одновременно
+
+
+# Когда мы создаем объект модели - Post(author__id=1, title='re' ...)
+# мы сохраняем этот объект в памяти. А вызывая метод save() у этого объекта
+# мы делаем SQL запрос INSERT в бд, вот так то.
+# ! НО, если мы измененм аттрибут экземпляра модели (какое-ниюудь поле), то метод save()
+# вызовет SQL-выражение UPDATE
+# Все изменения, которые мы делаем для объекта в памяти не вызываются до тех пор, пока
+# не вызвовется метод save(). Работая с объектом через ORM мы работаем в памяти
+# вызывая метод save(commit=True) мы делаем SQL-запрос INSERT или UPDATE
+# Post.objects.all() - это SQL-запрос SELECT * FROM blog_post;
+# но этот sql запрос будет выполняться не тогда, когда мы присвоим переменную,
+# а тогда, когда мы ее явно вызовем. Когда делаем непосредственное обращение к элементам QuerySet
+# это потому, что объекты запросов в django ленивые.
+# метод delete() тоже вызовет SQL-запрос
