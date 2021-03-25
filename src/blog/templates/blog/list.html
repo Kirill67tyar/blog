@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Список статей{% endblock %}
+
+{% block content %}
+{% for obj in obj_list %}
+
+
+<div class="card">
+    <h5 class="card-header">Featured</h5>
+    <div class="card-body">
+        <h5 class="card-title"><a href="{{obj.get_absolute_url}}">{{obj.title}}</a></h5>
+        <p class="card-text">{{obj.body|truncatewords:30|linebreaks}}</p>
+        <p>Published {{ obj.publish }} by {{obj.author}}</p>
+    </div>
+</div>
+
+{% endfor %}
+{% endblock %}

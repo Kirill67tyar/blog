@@ -4,7 +4,7 @@ from django.db.models import \
     DateTimeField, ForeignKey, SlugField, Manager, CASCADE)
 from django.db import models
 from django.utils import timezone
-
+from django.shortcuts import reverse
 
 
 class PublishManager(Manager):
@@ -54,8 +54,22 @@ class Post(Model):
     published = PublishManager()
 
 
+    def get_absolute_url(self):
+        kwargs = {
+            'year': self.publish.year,
+            'month': self.publish.month,
+            'day': self.publish.day,
+            'slug': self.slug,
+        }
+        args = [self.publish.year,
+            self.publish.month,
+            self.publish.day,
+            self.slug,]
+        return reverse('blog:retrieve', kwargs=kwargs)
 
-# консольная команда sqlmigrate application number_migration like
+
+
+# консольная команда sqlmipgrate application number_migration like
 #     python manage.py sqlmigrate 0003
 #     очень полезная команда. она не делает миграции в бд, и дает возможность посмотреть
 #     какой sql запрос будет при миграции в бд. какой sql запрос для создания таблицы в бд
