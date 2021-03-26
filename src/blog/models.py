@@ -124,3 +124,5 @@ COMMIT;
     # cleaned_data можно достать только после вызова метода is_valid(), это да. Но даже
     # если form.is_valid() - False, то cleaned_data все равно вызовется, но с полями
     # которые прощли на валидность
+
+# посмотри в experiments что делает метод requests built_absolute_uri()
