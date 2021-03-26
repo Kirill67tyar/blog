@@ -25,6 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 
 SECRET_KEY = os.getenv('SECRET_KEY')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -128,3 +130,13 @@ STATIC_URL = '/static/'
 # ]
 #
 # STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
+
+
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 465 # 993  465
+EMAIL_HOST_USER = EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
