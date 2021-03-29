@@ -8,6 +8,50 @@
         <h5 class="card-title">{{obj.title}}</h5>
         <p class="card-text">{{obj.body|linebreaks}}</p>
         <p>Published {{ obj.publish }} by {{obj.author}}</p>
+        <p><a href="{% url 'blog:share' obj.id %}">Share</a> this post</p>
     </div>
+
+    <!---------- Комментарии ----------------->
+
+    <div class="card">
+
+        <!--        {# with comments.count as total_comments #}-->
+        <!--        <h2>{total_comments} комментарий</h2>-->
+        <!--        {# endwith #}-->
+        {% for comment in comments %}
+        <div class="card-body">
+            <div class="col-md-6 mx-right">
+                <blockquote class="blockquote mb-0">
+                    <footer class="blockquote-footer">
+                        <small>{{forloop.counter}}) Комментарий от {{comment.name}}</small>
+                        <cite title="Source Title">{{comment.created}}</cite>
+                    </footer>
+
+                    <small><p>{{comment.body|linebreaks}}</p></small>
+
+                </blockquote>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card-body">
+            <h5>Комментариев пока нет</h5>
+        </div>
+        {% endfor %}
+
+    </div>
+    <div class="row">
+        <div class="col-md-4 mx-auto">
+            <form action="." method="post">
+                {{comment_form.as_p}}
+                {% csrf_token %}
+                <button type="submit">Написать комментарий</button>
+            </form>
+        </div>
+    </div>
+
 </div>
+<!---------- Комментарии ----------------->
+
 {% endblock %}
+
+

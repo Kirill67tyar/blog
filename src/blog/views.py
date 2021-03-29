@@ -1,13 +1,14 @@
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.shortcuts import render, HttpResponse, get_object_or_404
 from django.views import View
 from django.views.generic import ListView
 from django.core.mail import send_mail
-from blog.models import Post
-from blog.forms import EmailPostForm
+from blog.models import Post, Comment
+from blog.forms import EmailPostForm, CommentForm
 
-
+User
 def experiments(request):
     obj = get_object_or_404(Post, id=1)
     post_url = request.build_absolute_uri(obj.get_absolute_url())
@@ -26,11 +27,18 @@ def experiments(request):
     # print('\n\n--------------------------------------------\n',
     #       *dir(request),
     #       '---------------------------------------------\n\n',sep='\n')
-    # # ----------------------------------------------------------------
+    # # 3 ----------------------------------------------------------------
+    # print('\n\n--------------------------------------------\n',
+    #       request.method,
+    #       request.get_port,
+    #       request.get_raw_uri(),
+    #       request.headers,
+    #       request.body,
+    #       '---------------------------------------------\n\n',sep='\n')
     return HttpResponse('Check console')
 
 
-def concat_and_send_message(request, post, data):
+def concat_and_send_email(request, post, data):
     """
         Функция ответственна за конкатенацию и отправку сообщения
         возвращает True
@@ -39,10 +47,11 @@ def concat_and_send_message(request, post, data):
             post - экземпляр модели Post
             data - cleaned_data
     """
+    username = request.user.username
     post_url = request.build_absolute_uri(post.get_absolute_url())
-    title = f'{data["name"]} ({data["email"]}) recommends you reading {post.title}'
-    body = f'Read {post.title} at {post_url} \n\n {data["name"]}\'s comments:\n {data["comments"]}'
-    send_mail(title, body, settings.EMAIL_HOST_USER, [data['to']])
+    title = f'{username} ({data["email"]}) recommends you reading {post.title}'
+    body = f'Read {post.title} at {post_url} \n\n {username}\'s comments:\n {data["comments"]}'
+    # send_mail(title, body, settings.EMAIL_HOST_USER, [data['to']])
     sent = True
     return sent
 
@@ -63,8 +72,24 @@ def post_retrieve(request, year, month, day, slug):
         'publish__day': day,
         'slug': slug,
     }
-    obj = get_object_or_404(Post, **kwargs)
-    return render(request, 'blog/retrieve.html', context={'obj': obj,})
+    obj = get_object_or_404(Post.published, **kwargs)
+    comments = obj.comments.filter(active=True)
+    new_comment = None
+    if request.method == 'POST':
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            new_comment = comment_form.save(commit=False)
+            new_comment.post = obj
+            new_comment.save()
+    else:
+        comment_form = CommentForm()
+    context = {
+        'obj': obj,
+        'comments': comments,
+        'new_comment': new_comment,
+        'comment_form': comment_form,
+    }
+    return render(request, 'blog/retrieve.html', context=context)
 
 # send_mail('check',
 # "I'm checking sending messages from kirillbogomolov.ric@gmail.com",
@@ -83,18 +108,25 @@ def post_retrieve(request, year, month, day, slug):
 def post_share(request, post_id):
     """
         обратоботчик принимающий post и get запросы для отправки
-        вызывает функцию concat_and_send_message(request, post, data)
+        вызывает функцию concat_and_send_email(request, post, data)
         где post - экземпляр модели Post
         data - cleaned_data
     """
 
     post = get_object_or_404(Post, id=post_id, status='published')
     sent = False
+    print('\n\n--------------------------------------------\n',
+          request.method,
+          request.get_port,
+          request.get_raw_uri(),
+          request.headers,
+          request.body,
+          '---------------------------------------------\n\n',sep='\n')
     if request.method == 'POST':
         form = EmailPostForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            sent = concat_and_send_message(request=request, post=post, data=data)
+            sent = concat_and_send_email(request=request, post=post, data=data)
 
 
     # elif request.method == 'GET':

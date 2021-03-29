@@ -1,6 +1,34 @@
 {% extends 'base.html' %}
-{% block title %}{% endblock %}
+
+{% block title %}Share a post{% endblock %}
 
 {% block content %}
+
+
+{% if sent %}
+<figure class="text-center">
+    <div class="row">
+        <div class="col">
+            <h1>Письмо было успешно отправлено</h1>
+            <p>"{{post.title}}" пост был успешно отправлен {{form.cleaned_data.to}}</p>
+        </div>
+    </div>
+</figure>
+{% else %}
+<figure class="text-right">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1>Отправит пост "{{post.title}}" по почте</h1>
+            <form action="." method="POST">
+                {{form.as_p}}
+                {% csrf_token %}
+                    <input type="submit" value="Отправить письмо" class="btn btn-primary">
+<!--                <button type="submit" class="btn btn-primary">Send Email</button>-->
+            </form>
+        </div>
+    </div>
+</figure>
+<br>
+{% endif %}
 
 {% endblock %}

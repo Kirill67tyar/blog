@@ -1,7 +1,8 @@
 from django.contrib.auth.models import User
 from django.db.models import \
     (CharField, TextField, Model,
-    DateTimeField, ForeignKey, SlugField, Manager, CASCADE)
+    DateTimeField, ForeignKey, SlugField, 
+     EmailField, Manager, BooleanField, CASCADE)
 from django.db import models
 from django.utils import timezone
 from django.shortcuts import reverse
@@ -69,8 +70,29 @@ class Post(Model):
 
 
 
+class Comment(Model):
+    
+    post = ForeignKey('Post', on_delete=CASCADE, related_name='comments', verbose_name='Имя поста')
+    name = CharField(max_length=80, verbose_name='Имя пользователя')
+    email = EmailField(verbose_name='E-mail')
+    body = TextField(verbose_name='Тело комментария')
+    created = DateTimeField(auto_now_add=True)
+    updated = DateTimeField(auto_now=True)
+    active = BooleanField(default=True)
+    
+    class Meta:
+        ordering = 'active', 'created',
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+        
+    def __str__(self):
+        return f'Комментарий {self.name} в посте {self.post}'
+
+
+
+
 # консольная команда sqlmipgrate application number_migration like
-#     python manage.py sqlmigrate 0003
+#     python manage.py sqlmigrate blog 0003
 #     очень полезная команда. она не делает миграции в бд, и дает возможность посмотреть
 #     какой sql запрос будет при миграции в бд. какой sql запрос для создания таблицы в бд
     """
@@ -101,11 +123,14 @@ COMMIT;
 # Все изменения, которые мы делаем для объекта в памяти не вызываются до тех пор, пока
 # не вызвовется метод save(). Работая с объектом через ORM мы работаем в памяти
 # вызывая метод save(commit=True) мы делаем SQL-запрос INSERT или UPDATE
+# а вот save(commit=False) мы создаем объект в памяти и работаем с объектом python (пока не делаем SQL запрос)
+# метод delete() тоже вызовет SQL-запрос
 # Post.objects.all() - это SQL-запрос SELECT * FROM blog_post;
 # но этот sql запрос будет выполняться не тогда, когда мы присвоим переменную,
 # а тогда, когда мы ее явно вызовем. Когда делаем непосредственное обращение к элементам QuerySet
 # это потому, что объекты запросов в django ленивые.
-# метод delete() тоже вызовет SQL-запрос
+# По сути именованный аргумент related_name - это менеджер объектов, но для каждой конкретной записи
+    
 
 
 
@@ -124,5 +149,26 @@ COMMIT;
     # cleaned_data можно достать только после вызова метода is_valid(), это да. Но даже
     # если form.is_valid() - False, то cleaned_data все равно вызовется, но с полями
     # которые прощли на валидность
+
+    """
+>>> EmailPostForm({'email':'qwe@qwe.ru', 'to':'ewq@ewq.ru', 'comments':'asdasd'})
+<EmailPostForm bound=True, valid=Unknown, fields=(email;to;comments)>
+>>> e = _
+>>> e
+<EmailPostForm bound=True, valid=Unknown, fields=(email;to;comments)>
+>>> e.is_valid()
+True
+>>> e.cleaned_data
+{'email': 'qwe@qwe.ru', 'to': 'ewq@ewq.ru', 'comments': 'asdasd'}
+>>> e
+<EmailPostForm bound=True, valid=True, fields=(email;to;comments)>
+>>> type(e)
+<class 'blog.forms.EmailPostForm'>
+    """
+
+# Передача заполненных форм в body (post request) насколько можно судить - имеет аналогиный синтаксис
+# как и querystring (GET параметры)
+# key=value&key=value
+# Единственное value передается в каком то зашифрованном виде.
 
 # посмотри в experiments что делает метод requests built_absolute_uri()
