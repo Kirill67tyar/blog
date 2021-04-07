@@ -1,12 +1,13 @@
 from django.contrib.auth.models import User
 from django.db.models import \
     (CharField, TextField, Model,
-    DateTimeField, ForeignKey, SlugField, 
-     EmailField, Manager, BooleanField, CASCADE)
+    DateTimeField, ForeignKey, ManyToManyField,
+     SlugField, EmailField, Manager,
+     BooleanField, CASCADE)
 from django.db import models
 from django.utils import timezone
 from django.shortcuts import reverse
-
+from blog.utils import from_cyrilic_to_eng
 
 class PublishManager(Manager):
 
@@ -79,6 +80,7 @@ class Comment(Model):
     created = DateTimeField(auto_now_add=True)
     updated = DateTimeField(auto_now=True)
     active = BooleanField(default=True)
+
     
     class Meta:
         ordering = 'active', 'created',
@@ -87,6 +89,38 @@ class Comment(Model):
         
     def __str__(self):
         return f'Комментарий {self.name} в посте {self.post}'
+
+
+
+class Tag(Model):
+
+    name = CharField(max_length=255, verbose_name='Имя тега')
+    slug = SlugField(max_length=250, verbose_name='Слаг тега')
+    posts = ManyToManyField('Post', related_name='tags', verbose_name='Посты по тегу')
+
+    class Meta:
+        ordering = 'name',
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
+
+
+    def get_absolute_url(self):
+        return reverse('blog:list_by_tag', kwargs={'tag_slug': self.slug,})
+
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.lower()
+        if not self.slug:
+            self.slug = from_cyrilic_to_eng(str(self.name))
+        super().save(*args, **kwargs)
+
+
 
 
 
@@ -172,3 +206,23 @@ True
 # Единственное value передается в каком то зашифрованном виде.
 
 # посмотри в experiments что делает метод requests built_absolute_uri()
+
+
+# Немного о работе методов queryset - values и values_list:
+"""
+p.tags.all()
+<QuerySet [песик, посты по теги та ша, тааааааааааа-шааааааааааааааа, шох]>
+>>> p.tags.values()
+<QuerySet [{'id': 4, 'name': 'песик', 'slug': 'pesik'}, {'id': 7, 'name': 'посты по теги та ша', 'slug': 'posty-po-tegi-ta-sha'}, {'id': 8, 'name': 'тааааааааааа-шааааааааааааааа', 'slug': 'taaaaaaaaaaa-shaaaaaaaaaaaaaaa'}, {'id': 2, 'name': 'шох', 'slug': 'shoh'}]>
+>>> p.tags.values('name')
+<QuerySet [{'name': 'песик'}, {'name': 'посты по теги та ша'}, {'name': 'тааааааааааа-шааааааааааааааа'}, {'name': 'шох'}]>
+>>> p.tags.values_list('id')
+<QuerySet [(4,), (7,), (8,), (2,)]>
+>>> p.tags.values_list('id', flat=True)
+<QuerySet [4, 7, 8, 2]>
+
+>>> p.tags.values_list(flat=True)
+<QuerySet [4, 7, 8, 2]>
+>>> p.tags.values_list('slug', flat=True)
+<QuerySet ['pesik', 'posty-po-tegi-ta-sha', 'taaaaaaaaaaa-shaaaaaaaaaaaaaaa', 'shoh']>
+"""

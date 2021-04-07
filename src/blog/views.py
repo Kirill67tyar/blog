@@ -1,14 +1,15 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db.models import Count
 from django.shortcuts import render, HttpResponse, get_object_or_404
 from django.views import View
 from django.views.generic import ListView
 from django.core.mail import send_mail
-from blog.models import Post, Comment
+from blog.models import Post, Comment, Tag
 from blog.forms import EmailPostForm, CommentForm
 
-User
+
 def experiments(request):
     obj = get_object_or_404(Post, id=1)
     post_url = request.build_absolute_uri(obj.get_absolute_url())
@@ -57,12 +58,24 @@ def concat_and_send_email(request, post, data):
 
 
 
-def post_list(request):
+def post_list(request, tag_slug=None):
     qs = Post.published.all()
+    tag = None
+    if tag_slug:
+        tag = get_object_or_404(Tag, slug=tag_slug)
+        qs = tag.posts.annotate(count_posts=Count('title')).all()
     paginator = Paginator(qs, 2)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
-    return render(request, 'blog/list.html', context={'page_obj': page_obj,})
+    nothing = f"По тегу \"{tag}\" ничего не найдено"
+    something = f"По тегу \"{tag}\" найдено {qs.count()} постов"
+    report = f'{something if qs.count() else nothing}'
+    context = {
+        'page_obj': page_obj,
+        'tag': tag,
+        'report': report,
+    }
+    return render(request, 'blog/list.html', context=context)
 
 
 def post_retrieve(request, year, month, day, slug):
@@ -83,11 +96,22 @@ def post_retrieve(request, year, month, day, slug):
             new_comment.save()
     else:
         comment_form = CommentForm()
+
+    # Здесь мы реализуем рекоммендуемые статьи, по статьям по одинаковым тегам ------
+    post_tags_ids = obj.tags.values_list('id', flat=True)
+    similar_posts = Post.published.filter(tags__in=post_tags_ids).exclude(id=obj.id)
+    similar_posts = similar_posts.annotate(same_tags=Count('tags'))
+    # здеь мы сортируем статьи по количеству тегов и берем первые 4 статьи
+    similar_posts = similar_posts.order_by('-same_tags', '-publish')[:4]
+    # Здесь мы реализуем рекоммендуемые статьи, по статьям по одинаковым тегам ------
+
+
     context = {
         'obj': obj,
         'comments': comments,
-        'new_comment': new_comment,
+        # 'new_comment': new_comment,
         'comment_form': comment_form,
+        'similar_posts': similar_posts,
     }
     return render(request, 'blog/retrieve.html', context=context)
 
@@ -115,13 +139,13 @@ def post_share(request, post_id):
 
     post = get_object_or_404(Post, id=post_id, status='published')
     sent = False
-    print('\n\n--------------------------------------------\n',
-          request.method,
-          request.get_port,
-          request.get_raw_uri(),
-          request.headers,
-          request.body,
-          '---------------------------------------------\n\n',sep='\n')
+    # print('\n\n--------------------------------------------\n',
+    #       request.method,
+    #       request.get_port,
+    #       request.get_raw_uri(),
+    #       request.headers,
+    #       request.body,
+    #       '---------------------------------------------\n\n',sep='\n')
     if request.method == 'POST':
         form = EmailPostForm(request.POST)
         if form.is_valid():

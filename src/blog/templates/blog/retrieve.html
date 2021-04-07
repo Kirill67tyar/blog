@@ -2,13 +2,31 @@
 {% block title %}{{obj.title}}{% endblock %}
 
 {% block content %}
+
 <div class="card">
     <h5 class="card-header">Featured</h5>
+
     <div class="card-body">
         <h5 class="card-title">{{obj.title}}</h5>
+
+        {% for tag in obj.tags.all %}
+        {% if forloop.counter == 1 %}
+        Тэги:
+        {% endif %}
+        <a href="{{tag.get_absolute_url}}" class="badge rounded-pill bg-warning text-dark">
+            {{tag}}
+        </a>
+        {% if not forloop.last %}
+        ,
+        {% endif %}
+        {% endfor %}
+
         <p class="card-text">{{obj.body|linebreaks}}</p>
         <p>Published {{ obj.publish }} by {{obj.author}}</p>
         <p><a href="{% url 'blog:share' obj.id %}">Share</a> this post</p>
+        {% if similar_posts %}
+        {% include '_inc/dropdown.html' %}
+        {% endif %}
     </div>
 
     <!---------- Комментарии ----------------->

@@ -2,7 +2,16 @@
 {% block title %}Список статей{% endblock %}
 
 {% block content %}
-{% for obj in posts %}
+
+{% if tag %}
+<br>
+<div class="row justify-content-md-center">
+    <p class="h4">{{report}}</p>
+</div>
+<br>
+{% endif %}
+
+{% for obj in page_obj %}
 
 
 <div class="card">
