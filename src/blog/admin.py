@@ -5,7 +5,7 @@ from blog.models import Post, Comment
 class PostAdmin(admin.ModelAdmin):
 
     fields = ('id', 'title', 'slug', 'author', 'body', 'created', 'updated', 'publish', 'status',)
-    readonly_fields = ('created', 'updated', 'publish', 'id',)
+    readonly_fields = ('created', 'updated', 'id',)
     list_display = ('id', 'title', 'slug',)
     list_filter = ('status', 'created', 'publish', 'author',)
     search_fields = ('title', 'body',)
