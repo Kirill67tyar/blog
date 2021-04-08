@@ -1,0 +1,8 @@
+Последние {{count}} статей:
+{% for post in latest_posts %}
+<li>
+    <a class="dropdown-item" href="{{ post.get_absolute_url }}">
+        <div style="font-weight: 600;">{{post}}</div>({{post.publish|date:"d-M-Y"}})
+    </a>
+</li>
+{% endfor %}

@@ -1,3 +1,4 @@
+{% load blog_tags %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'blog:list' %}">Blog</a>
@@ -5,13 +6,31 @@
                 aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-            <div class="navbar-nav">
-                <a class="nav-link active" aria-current="page" href="#">Home</a>
-                <a class="nav-link" href="#">Features</a>
-                <a class="nav-link" href="#">Pricing</a>
-                <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-            </div>
-        </div>
+        <ul class="navbar-nav justify-content-end">
+
+            <li class="nav-item dropstart">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    Data
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <li>Количество статей - {% total_posts %}</li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+
+                    {% show_latest_posts %}
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    Топ самых комментируемых статей:
+                    {% show_most_comment_posts as most_comment_posts %}
+                    {% for post in most_comment_posts %}
+                    <li><a class="dropdown-item" href="{{post.get_absolute_url}}">{{post}} - {{post.total_comments}}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li>
+        </ul>
     </div>
 </nav>
