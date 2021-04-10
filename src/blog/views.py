@@ -1,13 +1,13 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.shortcuts import render, HttpResponse, get_object_or_404
 from django.views import View
 from django.views.generic import ListView
 from django.core.mail import send_mail
 from blog.models import Post, Comment, Tag
-from blog.forms import EmailPostForm, CommentForm
+from blog.forms import EmailPostForm, CommentForm, SearchForm
 
 
 def experiments(request):
@@ -172,3 +172,31 @@ class PostListView(ListView):
     context_object_name = 'posts'
     paginate_by = 2
     template_name = 'blog/list.html'
+
+
+
+class PostListBySearch(ListView):
+    
+    # context_object_name = 'posts'
+    template_name = 'blog/list.html'
+    model = Post
+    paginate_by = 2
+    allow_empty = True
+    
+    
+    def get_queryset(self):
+        query = self.request.GET.get('query')
+        # qs = self.model.published.filter(Q(title__icontains=query) | Q(body__icontains=query))
+        qs = Post.published.filter(Q(title__icontains=query) | Q(body__icontains=query))
+        return qs
+    
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        search = self.request.GET.get('query')
+        query = f'query={search}&'
+        count_posts = self.get_queryset().count()
+        result = f'{f"Все статьи по запросу {repr(search)} ({count_posts})" if count_posts != 0 else f"По запросу {repr(search)} ничего не найдено"}'
+        context['query'] = query
+        context['result'] = result
+        return context
+    

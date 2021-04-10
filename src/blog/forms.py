@@ -36,3 +36,8 @@ class CommentForm(ModelForm):
             'email': 'Ваша почта',
             'body': 'Комментарий',
         }
+
+
+class SearchForm(Form):
+
+    query = CharField(required=False, widget=TextInput(attrs=attrs))

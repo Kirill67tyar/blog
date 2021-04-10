@@ -145,6 +145,34 @@ COMMIT;
     """
 
 # Важно, ORM Django совместима с SQLite, MySQL, PostgreSQL, Oracle.
+# Но лучше всего django работает с PostgreSQL. Там более шировкий функционал
+# возможности работы django orm с PostgreSQL
+# Посмотри как у тебя реализован поиск
+# если бы использовалась db PostgreSQL то можно было бы реализовать иначе
+"""
+from django.contrib.postgres.search import SearchVector
+query = 'some query string'
+qs = Post.objects.filter(body__search=query)
+# or
+qs = Post.published.annotate(search=SearchVector('title', 'body')).filter(search=query)
+"""
+# from django.contrib.postgres.search import SearchVector
+# query = 'some query string'
+# qs = Post.objects.filter(body__search=query)
+# # or
+# qs = Post.published.annotate(search=SearchVector('title', 'body')).filter(search=query)
+# Кста, lookup search - довольно таки медленный и как правило не очень годится для больших объемов данных.
+# Короче, если хочешь знать ORM для PostgreSQL открой Django (Антонио Меле) - 83 стр. До 91 там
+# более менее подробно расписано. Обрати внимание и на стемминг и на ранжирование и на триграммы
+# также смотри https://docs.djangoproject.com/en/3.1/ref/contrib/postgres/search/
+# и https://djbook.ru/rel3.0/ref/contrib/postgres/search.html
+# Есть также дополнительные API которые предоставляют ORM для поиска Solt и Elasticsearch через
+# Haystack
+# Haystack - это приложение Django. Подробности:
+# https://haystacksearch.org/
+# https://django-haystack.readthedocs.io/en/master/
+
+
 # https://docs.djangoproject.com/en/3.1/ref/databases/
 # В django можно настроить работу с несколькими СУБД одновременно
 
@@ -184,7 +212,7 @@ COMMIT;
     # если form.is_valid() - False, то cleaned_data все равно вызовется, но с полями
     # которые прощли на валидность
 
-    """
+"""
 >>> EmailPostForm({'email':'qwe@qwe.ru', 'to':'ewq@ewq.ru', 'comments':'asdasd'})
 <EmailPostForm bound=True, valid=Unknown, fields=(email;to;comments)>
 >>> e = _
@@ -198,7 +226,7 @@ True
 <EmailPostForm bound=True, valid=True, fields=(email;to;comments)>
 >>> type(e)
 <class 'blog.forms.EmailPostForm'>
-    """
+"""
 
 # Передача заполненных форм в body (post request) насколько можно судить - имеет аналогиный синтаксис
 # как и querystring (GET параметры)

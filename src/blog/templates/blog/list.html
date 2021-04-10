@@ -12,6 +12,14 @@
 <br>
 {% endif %}
 
+{% if query %}
+<br>
+<div class="row justify-content-md-center">
+    <p class="h4">{{result}}</p>
+</div>
+<br>
+{% endif %}
+
 {% for obj in page_obj %}
 
 
@@ -27,3 +35,5 @@
 {% endfor %}
 {% include '_inc/pagination.html' %}
 {% endblock %}
+
+
