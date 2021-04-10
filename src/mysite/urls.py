@@ -26,6 +26,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('blog/', include('blog.urls', namespace='blog')),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps,}, name='django.contrib.sitemaps.views.sitemap'),
+    # http://127.0.0.1:8000/sitemap.xml
 ]
 
 if settings.DEBUG:
